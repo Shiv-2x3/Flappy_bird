@@ -36,15 +36,32 @@ reseized_background_image = pygame.transform.scale(
 class Bird(pygame.sprite.Sprite):
     def __init__(self , x , y):
         pygame.sprite.Sprite.__init__(self)
+        self.images = [] # Acts as a list and handles the frames of animation
+        self.index = 0 # Itreates over the list
+        self.counter = 0
+        for num in range(1 , 4): # itteration
+            img = pygame.image.load(f"/home/Projects/Flappy_bird/Images/Bird/bird{num}.bmp")
+            self.images.append(img)
         self.image = pygame.image.load("/home/Projects/Flappy_bird/Images/Bird/bird1.bmp")
         self.rect = self.image.get_rect()
         self.rect.center = [x , y]
 
+    def update(self): # This function is inbuild in pygame and updats the animationn as well
+        self.counter += 1 # Updation of counter ( indicates the number of itteration )
+        flap_cooldown = 5 # Indicates the necessary frames
+
+        if self.counter > flap_cooldown: # Condition for updation
+            self.counter = 0 
+            self.index += 1
+            if self.index >= len(self.images):
+                self.index = 0
+        self.image = self.images[self.index]
+
 bird_group = pygame.sprite.Group() # Behaves like a list Inbuild funcanality 
 
-flappy = Bird(100 , int(screen.get_height() / 2))
+flappy = Bird(100 , int(screen.get_height() / 2))  # Creating the usage for bird Class
 
-bird_group.add(flappy)
+bird_group.add(flappy) # Added inside bird_group
 
 
 
@@ -62,6 +79,7 @@ while running:
 
     # defining Bird
     bird_group.draw(screen)
+    bird_group.update()
 
 
     # Ground Image in Game loop
