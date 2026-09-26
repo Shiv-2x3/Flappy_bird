@@ -1,6 +1,6 @@
 # Importing Pygame
 import pygame
-
+import random
 # Initializing Pygame
 pygame.init()
 
@@ -37,6 +37,16 @@ flying = False
 
 # Game over variable
 Game_over = False
+
+#gaps between the pipe 
+pipe_gap = 150
+
+
+# pipe Frequency 
+pipe_frequency = 1500 # Millisecond
+
+last_pipe = pygame.time.get_ticks() - pipe_frequency
+
 
 # Bird Class With Sprite Function
 class Bird(pygame.sprite.Sprite):
@@ -90,13 +100,25 @@ class Bird(pygame.sprite.Sprite):
              self.image = pygame.transform.rotate(self.images[self.index],-90)
 
 
-# Creation for class for handaling pipe event
-class Pipe(pygame.sprite.Sprite):
-    def __init__(self, x , y):
+
+# creation of pipe class
+class pipe(pygame.sprite.Sprite):
+    def __init__(self , x , y, position):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("/home/Projects/Flappy_bird/Images/pipe.bmp")
         self.rect = self.image.get_rect()
-        self.rect.topleft = [x , y]
+        # for position = 1 is from top and -1 is from bottom
+        if position == 1:
+            self.image = pygame.transform.flip(self.image ,False , True)
+            self.rect.bottomleft = [x , y - int(pipe_gap / 2)]
+
+        if position == -1:
+            self.rect.topleft = [x , y+ int(pipe_gap / 2)]
+
+    def update(self):
+        self.rect.x -= scroll_speed
+        if self.rect.right < 0 :
+            self.kill()
 
 
 # working with bird class
@@ -106,13 +128,9 @@ flappy = Bird(100 , int(screen.get_height() / 2))  # Creating the usage for bird
 
 bird_group.add(flappy) # Added inside bird_group
 
-
-# Working with Pipe class
+# Working with pipe class
 pipe_group = pygame.sprite.Group()
 
-bottom_pipe = Pipe(300, int(screen.get_height() / 2))
-
-pipe_group.add(bottom_pipe)
 
 
 
@@ -138,9 +156,10 @@ while running:
     # defining Bird
     bird_group.draw(screen)
     bird_group.update()
-
-    # Defining pipe
     pipe_group.draw(screen)
+    pipe_group.update()
+
+    
 
     # condition when it touches the ground
     if flappy.rect.bottom > 500:
@@ -152,11 +171,24 @@ while running:
     # Ground Image in Game loop
     screen.blit(ground_image, (ground_scroll , 500))
 
+
+    # look for game collision
+    if pygame.sprite.groupcollide(bird_group , pipe_group , False , False) or flappy.rect.top < 0:
+        Game_over= True
     # For Moving Ground Image
     ground_scroll -= scroll_speed
 
     # This conditons just resets the ground_scroll
     if Game_over == False:   
+        time_now = pygame.time.get_ticks()
+        if time_now - last_pipe >  pipe_frequency:
+            pipe_height = random.randint(-100 , 100)
+            bottom_pipe = pipe(Window_width , int(screen.get_height() / 2) +  pipe_height, -1)
+            top_pipe = pipe(Window_width , int(screen.get_height()/2)+pipe_height ,  1)
+            pipe_group.add(bottom_pipe)
+            pipe_group.add(top_pipe)
+            last_pipe = time_now
+        pipe_group.update()
         if abs(ground_scroll) > 35:
             ground_scroll = 0
         pygame.display.update()
